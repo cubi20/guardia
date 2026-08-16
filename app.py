@@ -169,6 +169,11 @@ for clave, valor in VALORES_INICIALES.items():
     st.session_state.setdefault(clave, valor)
 
 
+# Nota sobre el símbolo del dólar: Streamlit interpreta $...$ como LaTeX, así que
+# en cualquier texto con dos o más "US$" hay que escribirlo escapado (US\$) o el
+# símbolo desaparece y el texto del medio se renderiza como una fórmula.
+
+
 def formato_numero(valor, decimales=0):
     """Formatea un número al estilo local: punto para miles, coma para decimales.
 
@@ -273,7 +278,7 @@ with st.sidebar:
     st.caption(
         f"Modelo `{MODELO_TEXTO}`, nivel gratuito: las consultas no tienen costo. "
         f"Los {formato_numero(st.session_state['tokens_total'])} tokens usados en "
-        f"esta sesión equivaldrían a US$ "
+        f"esta sesión equivaldrían a US\\$ "
         f"{formato_numero(st.session_state['costo_total'], 4)} en el nivel pago, "
         "que es la referencia para estimar cuánto costaría escalar la herramienta."
     )
@@ -493,8 +498,8 @@ with pestana_analizar:
                     f"Consulta procesada con `{uso['modelo']}` · "
                     f"{formato_numero(uso['tokens_entrada'])} tokens de entrada + "
                     f"{formato_numero(uso['tokens_salida'])} de salida · "
-                    f"costo US$ 0 (nivel gratuito; equivaldría a "
-                    f"US$ {formato_numero(uso['costo_usd'], 5)} en el nivel pago)"
+                    f"costo US\\$ 0 (nivel gratuito; equivaldría a "
+                    f"US\\$ {formato_numero(uso['costo_usd'], 5)} en el nivel pago)"
                 )
 
 
@@ -651,10 +656,10 @@ with pestana_acerca:
     st.markdown(
         f"Como referencia de escalabilidad: medido sobre los correos de ejemplo, "
         f"cada análisis consume unos 1.250 tokens. En el nivel pago "
-        f"(US$ {PRECIO_ENTRADA_POR_MILLON:.2f} y "
-        f"US$ {PRECIO_SALIDA_POR_MILLON:.2f} por millón de tokens de entrada y "
-        "salida) eso serían unos **US$ 0,0022 por consulta**, poco más de "
-        "**US$ 1 al mes** con 500 análisis. Incluso pagando, el costo es "
+        f"(US\\$ {PRECIO_ENTRADA_POR_MILLON:.2f} y "
+        f"US\\$ {PRECIO_SALIDA_POR_MILLON:.2f} por millón de tokens de entrada y "
+        "salida) eso serían unos **US\\$ 0,0022 por consulta**, poco más de "
+        "**US\\$ 1 al mes** con 500 análisis. Incluso pagando, el costo es "
         "marginal frente al de un solo incidente de seguridad."
     )
     st.caption(
