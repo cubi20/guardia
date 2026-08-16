@@ -5,9 +5,8 @@ Paquete con la lógica de negocio de la aplicación, separada de la interfaz
 (app.py) para que el código sea más fácil de leer, probar y mantener.
 
 Módulos:
-    prompts.py   Prompts y esquema de salida dirigida (JSON Schema).
-    analisis.py  Cliente de OpenAI, análisis texto-texto y cálculo de costos.
-    imagen.py    Generación de la placa de concientización (texto-imagen).
+    prompts.py   Prompt principal y esquema de la salida dirigida.
+    analisis.py  Cliente de Gemini, análisis del mensaje y medición del consumo.
     ejemplos.py  Mensajes de ejemplo para probar la aplicación.
 """
 

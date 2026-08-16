@@ -34,35 +34,35 @@ más difícil el problema, tiene sentido usar esa misma tecnología para resolve
 | **2. La IA lo analiza** | Revisa dominio del remitente, urgencia, qué se pide, enlaces y redacción. |
 | **3. Recibís el veredicto** | Nivel de riesgo, señales concretas, explicación simple y qué hacer ahora. |
 
-Además, GuardIA puede generar una **placa de concientización** con IA a partir
-del resultado, para que cada intento de phishing recibido se transforme en
-material de capacitación para todo el equipo.
+## Cómo se integra la IA
 
-## Los dos modelos de IA que integra
-
-| Modelo | Rol en la aplicación |
-|---|---|
-| **Texto → texto** (`gpt-4o-mini`) | Núcleo de la app. Analiza el mensaje y devuelve el diagnóstico con **salida dirigida** (*Structured Outputs*). |
-| **Texto → imagen** (`gpt-image-1-mini` / `gpt-image-1` / `dall-e-3`) | Genera la ilustración de la placa de concientización a partir del diagnóstico. |
+El texto se envía a **`gemini-2.5-flash`** junto con un prompt que le asigna el
+rol de analista de ciberseguridad, le da un checklist de qué evaluar y le
+prohíbe inventar datos o afirmar con certeza absoluta.
 
 ### Salida dirigida
 
 En lugar de pedirle al modelo "respondeme en JSON" y confiar en que obedezca, se
-envía un **JSON Schema con `strict: true`**: la API valida la respuesta contra el
-esquema antes de devolverla. Así la interfaz siempre recibe la misma estructura
-y puede dibujarla igual en todos los casos, sin parsear texto libre.
+envía un **esquema de respuesta** junto con la consulta
+(`response_schema` + `response_mime_type="application/json"`) y la API garantiza
+que el resultado lo cumpla. Así la interfaz siempre recibe la misma estructura y
+puede dibujarla igual en todos los casos, sin parsear texto libre.
 
 ```json
 {
-  "nivel_riesgo": "bajo | medio | alto | indeterminado",
-  "puntaje": 0-100,
   "tipo_de_engano": "técnica detectada",
   "senales": [{"titulo": "...", "detalle": "...", "gravedad": "baja|media|alta"}],
+  "puntaje": 0-100,
+  "nivel_riesgo": "bajo | medio | alto | indeterminado",
   "explicacion": "en lenguaje simple, no técnico",
   "recomendacion": "qué hacer ahora",
   "verificacion_sugerida": "cómo confirmarlo por un canal oficial"
 }
 ```
+
+El orden de los campos no es casual: `propertyOrdering` hace que el modelo
+primero detecte las señales, después puntúe y recién al final redacte la
+explicación, de modo que el texto se apoye en lo que ya identificó.
 
 ## Estructura del proyecto
 
@@ -72,20 +72,19 @@ GuardIA/
 │                               resultado, "cómo funciona" y footer.
 ├── guardia/
 │   ├── __init__.py
-│   ├── prompts.py              Prompt principal, JSON Schema y prompt de imagen.
-│   ├── analisis.py             Cliente de OpenAI, análisis y cálculo de costos.
-│   ├── imagen.py               Placa de concientización (texto → imagen + Pillow).
+│   ├── prompts.py              Prompt principal y esquema de la salida dirigida.
+│   ├── analisis.py             Cliente de Gemini, análisis y medición del consumo.
 │   └── ejemplos.py             Mensajes de prueba (fraudes y correos legítimos).
 ├── .streamlit/
 │   ├── config.toml             Paleta de colores de la aplicación.
 │   └── secrets.toml.example    Plantilla para la clave de API.
 ├── requirements.txt            Dependencias de Python.
-├── packages.txt                Tipografías para el despliegue en Streamlit Cloud.
 └── README.md
 ```
 
-La lógica está separada de la interfaz: `app.py` no sabe nada de OpenAI, solo
-llama a las funciones del paquete `guardia/`.
+La lógica está separada de la interfaz: `app.py` no sabe nada de Gemini, solo
+llama a las funciones del paquete `guardia/`. Cambiar de proveedor de IA
+implicaría reescribir `analisis.py` y ningún otro archivo.
 
 ## Cómo ejecutarlo localmente
 
@@ -97,7 +96,8 @@ source venv/bin/activate          # en Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Cargá tu clave de OpenAI (nunca se escribe en el código):
+Conseguí una clave gratuita en [Google AI Studio](https://aistudio.google.com/apikey)
+y cargala (nunca se escribe en el código):
 
 ```bash
 cp .streamlit/secrets.toml.example .streamlit/secrets.toml
@@ -117,28 +117,32 @@ streamlit run app.py
    elegí el repo, la rama `main` y el archivo `app.py`.
 3. En **Advanced settings → Secrets**, pegá:
    ```toml
-   OPENAI_API_KEY = "sk-proj-..."
+   GEMINI_API_KEY = "AIza..."
    ```
-4. **Deploy**. El archivo `packages.txt` instala la tipografía DejaVu que usa la
-   placa de concientización.
+4. **Deploy**.
 
 ## Factibilidad económica
 
-Cada análisis consume alrededor de 1.500 tokens de entrada y 500 de salida.
+**El costo de operación es cero.** El nivel gratuito de la API de Gemini cubre
+holgadamente el uso previsto de la herramienta y el hosting en Streamlit
+Community Cloud tampoco tiene costo: no hace falta tarjeta de crédito para poner
+la aplicación en producción.
 
-| Concepto | Costo |
-|---|---|
-| Un análisis (`gpt-4o-mini`) | ≈ US$ 0,00053 |
-| 500 análisis por mes | ≈ US$ 0,27 |
-| 5.000 análisis por mes | ≈ US$ 2,65 |
-| Placa de concientización (opcional, a pedido) | ≈ US$ 0,01 |
-| Hosting (Streamlit Community Cloud) | US$ 0 |
-| Repositorio (GitHub) y entorno (Python, VS Code) | US$ 0 |
+Como referencia de escalabilidad, cada análisis consume alrededor de 1.500
+tokens de entrada y 500 de salida:
 
-Precios de OpenAI vigentes en agosto de 2026: US$ 0,15 por millón de tokens de
-entrada y US$ 0,60 por millón de salida para `gpt-4o-mini`. La aplicación
-**calcula y muestra el costo real** de cada consulta en la barra lateral, a
-partir de los tokens efectivamente consumidos.
+| Concepto | Nivel gratuito | Equivalente en nivel pago |
+|---|---|---|
+| Un análisis (`gemini-2.5-flash`) | US$ 0 | ≈ US$ 0,0017 |
+| 500 análisis por mes | US$ 0 | ≈ US$ 0,85 |
+| 5.000 análisis por mes | US$ 0 | ≈ US$ 8,50 |
+| Hosting (Streamlit Community Cloud) | US$ 0 | US$ 0 |
+| Repositorio (GitHub) y entorno (Python, VS Code) | US$ 0 | US$ 0 |
+
+Precios del nivel pago vigentes en agosto de 2026: US$ 0,30 por millón de tokens
+de entrada y US$ 2,50 por millón de salida para `gemini-2.5-flash`. La
+aplicación **mide los tokens realmente consumidos** en cada consulta y muestra su
+costo equivalente en la barra lateral.
 
 ## Limitaciones
 
@@ -150,11 +154,24 @@ partir de los tokens efectivamente consumidos.
 - **No reemplaza** al antivirus, a los filtros de correo ni al segundo factor de
   autenticación (MFA): los complementa en el punto donde esas defensas no
   llegan, que es la decisión de la persona.
-- **Privacidad:** el texto se envía a la API de OpenAI. No debe pegarse
+- **Privacidad:** el texto se envía a la API de Google Gemini. No debe pegarse
   información confidencial innecesaria; en un uso productivo correspondería
   anonimizar los datos sensibles.
+- **El nivel gratuito tiene cupos** de consultas por minuto y por día. Son
+  holgados para el uso de una PyME, pero un pico de tráfico podría agotarlos
+  temporalmente.
 - **El phishing evoluciona:** el prompt y los ejemplos deben mantenerse
   actualizados para no perder efectividad.
+
+## Trabajo futuro
+
+La próxima función prevista es la **placa de concientización**: una pieza visual
+generada con un modelo texto → imagen a partir del diagnóstico, para que el
+responsable de la PyME pueda compartirla por el grupo interno y convertir cada
+intento de phishing recibido en material de capacitación para todo el equipo.
+Quedó fuera de esta versión porque la generación de imágenes no está disponible
+en los niveles gratuitos, y mantener la herramienta sin costo es parte de su
+propuesta de valor.
 
 ## Decisiones de diseño del prompt
 
@@ -162,7 +179,8 @@ partir de los tokens efectivamente consumidos.
 |---|---|
 | Rol de *analista de ciberseguridad experto* | Sitúa al modelo en el dominio correcto y mejora la precisión de las señales que detecta. |
 | Checklist explícito de qué evaluar | Reduce la ambigüedad y hace que dos análisis del mismo correo sean consistentes. |
-| Salida dirigida con JSON Schema `strict` | La interfaz siempre recibe la misma estructura; no hay que parsear texto libre. |
+| Salida dirigida con esquema | La interfaz siempre recibe la misma estructura; no hay que parsear texto libre. |
+| `propertyOrdering`: señales antes que explicación | El modelo redacta apoyándose en lo que ya detectó, no al revés. |
 | Reglas anti-alucinación | Le prohíben inventar datos y afirmar con certeza absoluta. |
 | Lenguaje simple obligatorio | El destinatario es un empleado sin perfil técnico. |
 | Delimitadores `<<<MENSAJE>>>` | Protegen contra inyección de prompt: si el correo contiene órdenes dirigidas a una IA, se tratan como una señal de riesgo, no como instrucciones. |
@@ -170,5 +188,5 @@ partir de los tokens efectivamente consumidos.
 
 ---
 
-**Tecnologías:** Python · Streamlit · API de OpenAI (Structured Outputs) ·
-Pillow · Streamlit Community Cloud · GitHub
+**Tecnologías:** Python · Streamlit · API de Google Gemini (salida dirigida con
+esquema) · Streamlit Community Cloud · GitHub

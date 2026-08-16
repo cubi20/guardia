@@ -2,13 +2,17 @@
 
 Lo que ya está hecho y lo que falta que hagas vos (necesita tus cuentas).
 
+> **Nota:** el proyecto usa la API de **Google Gemini**, cuyo nivel gratuito no
+> requiere tarjeta de crédito. La pre-entrega mencionaba OpenAI; el cambio está
+> explicado y justificado en la lámina 12 de la presentación.
+
 ---
 
 ## ✅ Ya está listo
 
 - [x] Aplicación web con Streamlit: título, descripción, botón de acción y sección "Cómo funciona".
-- [x] Integración de IA con **salida dirigida** (JSON Schema `strict`) sobre `gpt-4o-mini`.
-- [x] Segundo modelo **texto → imagen** para la placa de concientización.
+- [x] Integración de IA con **salida dirigida** sobre `gemini-2.5-flash`.
+- [x] Costo de operación cero: nivel gratuito de la API + hosting sin cargo.
 - [x] Estructura visual: header, footer, paleta de colores propia.
 - [x] Código organizado y comentado, con la lógica separada de la interfaz.
 - [x] Repositorio git inicializado con el primer commit.
@@ -16,14 +20,15 @@ Lo que ya está hecho y lo que falta que hagas vos (necesita tus cuentas).
 
 ---
 
-## 1. Probar la app en tu máquina (10 minutos)
+## 1. Conseguir la clave de Gemini y probar la app (10 minutos)
 
-```bash
-cd "/Users/agustin/Documents/Coder House/GuardIA"
-cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-```
+La clave es **gratuita y no pide tarjeta de crédito**:
 
-Abrí `.streamlit/secrets.toml` y pegá tu clave de OpenAI. Después:
+1. Entrá a [aistudio.google.com/apikey](https://aistudio.google.com/apikey) con tu cuenta de Google.
+2. **Create API key** → copiala.
+3. Abrí `.streamlit/secrets.toml` y pegala en la línea `GEMINI_API_KEY = ""`.
+
+Después:
 
 ```bash
 cd "/Users/agustin/Documents/Coder House/GuardIA" && ./venv/bin/python -m streamlit run app.py
@@ -33,7 +38,8 @@ Probá los cinco ejemplos del selector. Los tres primeros deberían dar riesgo
 **alto**, el del turno médico **bajo** y el del paquete retenido **medio**. Si
 alguno no coincide, el prompt está en `guardia/prompts.py` y se puede ajustar.
 
-Probá también el botón **Generar placa de concientización**.
+Fijate también en la barra lateral: muestra los tokens consumidos y el costo
+equivalente en el nivel pago. Es la evidencia de la factibilidad económica.
 
 ---
 
@@ -59,7 +65,7 @@ cd "/Users/agustin/Documents/Coder House/GuardIA" && git remote add origin https
 4. **Advanced settings → Secrets**, pegá:
 
    ```toml
-   OPENAI_API_KEY = "sk-proj-..."
+   GEMINI_API_KEY = "AIza..."
    ```
 
 5. **Deploy**. Tarda unos minutos la primera vez.
@@ -71,7 +77,7 @@ Guardá la URL: va a ser algo como `https://guardia.streamlit.app`.
 
 ## 4. Completar los enlaces en la presentación
 
-Abrí `docs/GuardIA-ProyectoFinal-IdoyagaMolina.pptx` y andá a la **lámina 14
+Abrí `docs/GuardIA-ProyectoFinal-IdoyagaMolina.pptx` y andá a la **lámina 15
 ("Enlaces del proyecto")**. Reemplazá las tres direcciones de ejemplo por:
 
 | Campo | Qué poner |
@@ -94,8 +100,6 @@ resultado de análisis a la vista**. Una vez desplegada, sacá una captura de un
 análisis real (con el nivel de riesgo, las señales y la recomendación) y
 reemplazá la de la lámina 7: es la imagen que mejor muestra que la app funciona.
 
-Si generás una placa de concientización real, sumala también.
-
 ---
 
 ## 6. Pasar la presentación a Google Slides y compartirla
@@ -108,7 +112,7 @@ Comentador**:
 2. Clic derecho sobre el archivo → **Abrir con → Presentaciones de Google**.
 3. **Archivo → Guardar como Presentaciones de Google** (queda una copia nativa).
 4. Revisá que las láminas se vean bien: Google Slides a veces mueve algún texto.
-   Prestá atención a las láminas 9, 10 y 11, que tienen bloques de código.
+   Prestá atención a las láminas 9, 10, 11 y 13, que tienen bloques de código y tablas.
 5. **Compartir → Acceso general → Cualquier persona con el enlace → Comentador**.
 6. **Copiar enlace** y entregá ese enlace.
 
@@ -118,6 +122,6 @@ Comentador**:
 
 - [ ] La app abre desde el enlace de Streamlit y analiza un correo de prueba.
 - [ ] El repositorio de GitHub es público y **no** contiene la clave de API.
-- [ ] Las tres direcciones de la lámina 14 son las reales.
+- [ ] Las tres direcciones de la lámina 15 son las reales.
 - [ ] El enlace de Google Slides está en modo **Comentador**.
 - [ ] Los datos de la portada están bien (nombre, comisión #95920).

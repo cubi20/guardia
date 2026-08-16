@@ -1,3 +1,2 @@
 streamlit>=1.40
-openai>=1.60
-pillow>=10.0
+google-genai>=1.0

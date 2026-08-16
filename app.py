@@ -11,7 +11,7 @@ mensaje que le genera dudas y recibe, en segundos, un diagnóstico estructurado
 hacer— generado por un modelo de IA con salida dirigida.
 
 Este archivo contiene únicamente la interfaz. Toda la lógica (prompts, llamadas
-a la API, generación de la placa) vive en el paquete `guardia/`.
+a la API) vive en el paquete `guardia/`.
 """
 
 import html
@@ -22,7 +22,7 @@ import streamlit as st
 
 from guardia import __version__
 from guardia.analisis import (
-    MODELO_TEXTO,
+    MODELOS_TEXTO,
     PRECIO_ENTRADA_POR_MILLON,
     PRECIO_SALIDA_POR_MILLON,
     ErrorGuardIA,
@@ -30,7 +30,10 @@ from guardia.analisis import (
     crear_cliente,
 )
 from guardia.ejemplos import EJEMPLOS, buscar_ejemplo
-from guardia.imagen import ErrorImagen, generar_placa
+
+# Modelo que se usa normalmente; si no estuviera disponible, `analizar_mensaje`
+# prueba los siguientes de la lista y el resultado informa cuál respondió.
+MODELO_TEXTO = MODELOS_TEXTO[0]
 
 # ===========================================================================
 # 1. CONFIGURACIÓN GENERAL Y ESTILOS
@@ -153,10 +156,10 @@ COLORES_RIESGO = {
 
 VALORES_INICIALES = {
     "diagnostico": None,   # último análisis realizado
-    "uso": None,           # tokens y costo de ese análisis
-    "placa": None,         # placa de concientización generada (bytes PNG)
+    "uso": None,           # tokens consumidos por ese análisis
     "consultas": 0,        # cantidad de análisis en la sesión
-    "costo_total": 0.0,    # costo acumulado en dólares
+    "tokens_total": 0,     # tokens acumulados en la sesión
+    "costo_total": 0.0,    # costo equivalente en el nivel pago
     "cuerpo": "",
     "remitente": "",
     "asunto": "",
@@ -170,18 +173,19 @@ def obtener_api_key():
     """Busca la clave de API en los secretos de Streamlit o en el entorno.
 
     En la app publicada la clave vive en los secretos de Streamlit Community
-    Cloud; en desarrollo local alcanza con la variable de entorno. Nunca se
-    escribe la clave en el código ni se sube al repositorio.
+    Cloud; en desarrollo local alcanza con el archivo .streamlit/secrets.toml o
+    la variable de entorno. Nunca se escribe la clave en el código ni se sube al
+    repositorio.
 
     Returns:
         str: la clave encontrada, o cadena vacía si no hay ninguna.
     """
     try:
-        if "OPENAI_API_KEY" in st.secrets:
-            return st.secrets["OPENAI_API_KEY"]
+        if "GEMINI_API_KEY" in st.secrets:
+            return st.secrets["GEMINI_API_KEY"]
     except Exception:  # noqa: BLE001 - no existe secrets.toml en local
         pass
-    return os.environ.get("OPENAI_API_KEY", "")
+    return os.environ.get("GEMINI_API_KEY", "")
 
 
 def cargar_ejemplo():
@@ -194,7 +198,6 @@ def cargar_ejemplo():
     st.session_state["asunto"] = ejemplo["asunto"]
     st.session_state["enlaces"] = ejemplo["enlaces"]
     st.session_state["diagnostico"] = None
-    st.session_state["placa"] = None
 
 
 def limpiar_formulario():
@@ -203,7 +206,6 @@ def limpiar_formulario():
         st.session_state[clave] = ""
     st.session_state["diagnostico"] = None
     st.session_state["uso"] = None
-    st.session_state["placa"] = None
 
 
 # ===========================================================================
@@ -242,7 +244,7 @@ with st.sidebar:
     else:
         st.error("Falta configurar la clave de API", icon="⚠️")
         st.caption(
-            "Cargá `OPENAI_API_KEY` en los secretos de la app para habilitar "
+            "Cargá `GEMINI_API_KEY` en los secretos de la app para habilitar "
             "el análisis."
         )
 
@@ -250,11 +252,13 @@ with st.sidebar:
     st.markdown("### Consumo de esta sesión")
     columna_a, columna_b = st.columns(2)
     columna_a.metric("Análisis", st.session_state["consultas"])
-    columna_b.metric("Costo (US$)", f"{st.session_state['costo_total']:.4f}")
+    columna_b.metric("Costo", "US$ 0")
     st.caption(
-        f"Modelo `{MODELO_TEXTO}` · US$ {PRECIO_ENTRADA_POR_MILLON:.2f} por millón "
-        f"de tokens de entrada y US$ {PRECIO_SALIDA_POR_MILLON:.2f} de salida. "
-        "El costo se calcula con los tokens reales de cada consulta."
+        f"Modelo `{MODELO_TEXTO}`, nivel gratuito: las consultas no tienen costo. "
+        f"Los {st.session_state['tokens_total']:,} tokens usados en esta sesión "
+        f"equivaldrían a US$ {st.session_state['costo_total']:.4f} en el nivel "
+        "pago, que es la referencia para estimar cuánto costaría escalar la "
+        "herramienta."
     )
 
     st.divider()
@@ -340,8 +344,10 @@ with pestana_analizar:
                 )
             st.session_state["diagnostico"] = diagnostico
             st.session_state["uso"] = uso
-            st.session_state["placa"] = None
             st.session_state["consultas"] += 1
+            st.session_state["tokens_total"] += (
+                uso["tokens_entrada"] + uso["tokens_salida"]
+            )
             st.session_state["costo_total"] += uso["costo_usd"]
         except ErrorGuardIA as error:
             st.error(str(error), icon="⚠️")
@@ -416,35 +422,6 @@ with pestana_analizar:
             unsafe_allow_html=True,
         )
 
-        # --- Contenido adicional: placa de concientización (texto -> imagen)
-        st.divider()
-        st.markdown("### Convertí este caso en capacitación")
-        st.caption(
-            "GuardIA genera con IA una placa lista para compartir por el grupo "
-            "interno de la empresa o para imprimir: así, cada intento de phishing "
-            "recibido se transforma en material de concientización para todo el equipo."
-        )
-
-        if st.button("🎨  Generar placa de concientización", use_container_width=True):
-            try:
-                cliente = crear_cliente(obtener_api_key())
-                with st.spinner("Generando la placa con IA…"):
-                    placa, modelo_imagen = generar_placa(cliente, diagnostico)
-                st.session_state["placa"] = placa
-                st.caption(f"Ilustración generada con `{modelo_imagen}`.")
-            except (ErrorGuardIA, ErrorImagen) as error:
-                st.warning(str(error), icon="⚠️")
-
-        if st.session_state["placa"]:
-            st.image(st.session_state["placa"], use_container_width=True)
-            st.download_button(
-                "⬇️  Descargar placa (PNG)",
-                data=st.session_state["placa"],
-                file_name=f"guardia-placa-{datetime.now():%Y%m%d-%H%M}.png",
-                mime="image/png",
-                use_container_width=True,
-            )
-
         # --- Informe descargable y detalle de consumo -------------------------
         st.divider()
         informe = [
@@ -488,7 +465,8 @@ with pestana_analizar:
                     f"Consulta procesada con `{uso['modelo']}` · "
                     f"{uso['tokens_entrada']} tokens de entrada + "
                     f"{uso['tokens_salida']} de salida · "
-                    f"costo US$ {uso['costo_usd']:.5f}"
+                    f"costo US$ 0 (nivel gratuito; equivaldría a "
+                    f"US$ {uso['costo_usd']:.5f} en el nivel pago)"
                 )
 
 
@@ -540,19 +518,20 @@ with pestana_como:
         "- **Explicación en lenguaje simple**, sin jerga técnica.\n"
         "- **Recomendación y verificación sugerida**: qué hacer ahora y cómo "
         "confirmarlo por un canal oficial.\n"
-        "- **Placa de concientización** opcional, generada con IA, para compartir "
-        "el caso con el resto del equipo."
+        "- **Un informe descargable** en texto, para archivar el caso o "
+        "reenviarlo a quien corresponda."
     )
 
     st.markdown("### Cómo funciona por dentro")
     st.markdown(
-        f"El texto se envía al modelo **{MODELO_TEXTO}** de OpenAI junto con un "
+        f"El texto se envía al modelo **{MODELO_TEXTO}** de Google junto con un "
         "prompt que le asigna el rol de analista de ciberseguridad, le da un "
         "checklist de qué evaluar y le prohíbe inventar datos o afirmar con "
         "certeza absoluta. La respuesta se pide con **salida dirigida** "
-        "(*Structured Outputs*): la API valida el resultado contra un esquema "
-        "JSON antes de devolverlo, por lo que la aplicación siempre recibe la "
-        "misma estructura y puede mostrarla igual en todos los casos."
+        "(*structured output*): se envía un esquema junto con la consulta y la "
+        "API garantiza que el resultado lo cumpla, por lo que la aplicación "
+        "siempre recibe la misma estructura y puede mostrarla igual en todos "
+        "los casos."
     )
     st.code(
         """{
@@ -584,8 +563,8 @@ with pestana_como:
         "defensas no llegan: la decisión de la persona.\n"
         "- **El phishing evoluciona.** El prompt y los ejemplos se actualizan para "
         "no perder efectividad.\n"
-        "- **Privacidad:** el texto se envía a la API de OpenAI para su análisis. "
-        "No pegues información confidencial que no sea necesaria."
+        "- **Privacidad:** el texto se envía a la API de Google Gemini para su "
+        "análisis. No pegues información confidencial que no sea necesaria."
     )
 
 
@@ -621,34 +600,51 @@ with pestana_acerca:
         "misma tecnología para resolverlo."
     )
 
-    st.markdown("### Los dos modelos que integra")
+    st.markdown("### Cómo se integra la IA")
     st.markdown(
-        f"- **Texto → texto ({MODELO_TEXTO}):** es el núcleo. Analiza el mensaje y "
-        "devuelve el diagnóstico con salida dirigida.\n"
-        "- **Texto → imagen:** genera la placa de concientización a partir del "
-        "resultado, para transformar cada caso real en material de capacitación."
+        f"El núcleo de la aplicación es el modelo **{MODELO_TEXTO}**, de la "
+        "familia Flash de Google. Analiza el mensaje y devuelve el diagnóstico "
+        "con **salida dirigida**: junto con la consulta se envía el esquema de "
+        "la respuesta, y la API garantiza que el resultado lo cumpla. Eso es lo "
+        "que convierte una respuesta de chat en una funcionalidad confiable."
     )
 
     st.markdown("### Factibilidad económica")
     st.markdown(
-        f"Cada análisis consume alrededor de 1.500 tokens de entrada y 500 de "
-        f"salida. Con los precios de `{MODELO_TEXTO}` "
-        f"(US$ {PRECIO_ENTRADA_POR_MILLON:.2f} y US$ {PRECIO_SALIDA_POR_MILLON:.2f} "
-        "por millón de tokens de entrada y salida), eso da un costo aproximado de "
-        "**US$ 0,0005 por consulta**: unos **US$ 0,25 al mes** con 500 análisis. "
-        "El hosting en Streamlit Community Cloud no tiene costo. La placa de "
-        "concientización cuesta más por unidad, pero se genera solo cuando el "
-        "usuario la pide, no en cada análisis."
+        "**El costo de operación es cero.** El nivel gratuito de la API de "
+        "Gemini cubre holgadamente el uso previsto de la herramienta, y el "
+        "hosting en Streamlit Community Cloud tampoco tiene costo."
+    )
+    st.markdown(
+        f"Como referencia de escalabilidad: cada análisis consume alrededor de "
+        f"1.500 tokens de entrada y 500 de salida. En el nivel pago "
+        f"(US$ {PRECIO_ENTRADA_POR_MILLON:.2f} y "
+        f"US$ {PRECIO_SALIDA_POR_MILLON:.2f} por millón de tokens de entrada y "
+        "salida) eso serían unos **US$ 0,0017 por consulta**, es decir menos de "
+        "**US$ 1 al mes** con 500 análisis. Incluso pagando, el costo es "
+        "marginal frente al de un solo incidente de seguridad."
     )
     st.caption(
-        "La barra lateral muestra el costo real acumulado en esta sesión, "
-        "calculado con los tokens efectivamente consumidos."
+        "La barra lateral muestra los tokens realmente consumidos en esta "
+        "sesión y su costo equivalente."
+    )
+
+    st.markdown("### Trabajo futuro")
+    st.markdown(
+        "La próxima función prevista es la **placa de concientización**: una "
+        "pieza visual generada con un modelo texto → imagen a partir del "
+        "diagnóstico, para que el responsable de la PyME pueda compartirla por "
+        "el grupo interno y convertir cada intento de phishing recibido en "
+        "material de capacitación para todo el equipo. Quedó fuera de esta "
+        "versión porque la generación de imágenes no está disponible en los "
+        "niveles gratuitos, y mantener la herramienta sin costo es parte de su "
+        "propuesta de valor para una PyME."
     )
 
     st.markdown("### Tecnologías")
     st.markdown(
-        "Python · Streamlit · API de OpenAI (Structured Outputs) · Pillow · "
-        "Streamlit Community Cloud · GitHub"
+        "Python · Streamlit · API de Google Gemini (salida dirigida con "
+        "esquema) · Streamlit Community Cloud · GitHub"
     )
 
 

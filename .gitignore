@@ -16,7 +16,3 @@ __pycache__/
 .DS_Store
 .vscode/
 .idea/
-
-# Salidas generadas por la app durante las pruebas
-*.png
-!docs/*.png
