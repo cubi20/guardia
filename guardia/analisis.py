@@ -10,6 +10,7 @@ este archivo y ningún otro.
 """
 
 import json
+import time
 
 from google import genai
 from google.genai import types
@@ -30,25 +31,46 @@ from .prompts import (
 # La lista es un orden de preferencia: si el primer modelo no está disponible
 # en la cuenta, se prueba el siguiente. Así la app no deja de funcionar cuando
 # Google renombra o retira una versión.
+# Se usan los alias `-latest` a propósito: Google los mantiene apuntando a la
+# versión vigente de cada familia, mientras que los nombres con número de
+# versión dejan de habilitarse para cuentas nuevas cuando salen los siguientes.
+# El nivel gratuito da 20 consultas por día **por modelo**, así que la lista
+# cumple dos funciones: cubre que un modelo deje de estar disponible y, sobre
+# todo, multiplica el cupo diario. Si el primero agota su cuota, la app sigue
+# funcionando con el siguiente en lugar de quedarse muda hasta el otro día.
 MODELOS_TEXTO = [
-    "gemini-2.5-flash",       # el que se usa normalmente
-    "gemini-2.0-flash",       # alternativa estable
-    "gemini-2.5-flash-lite",  # más liviano, por si los otros no responden
+    "gemini-flash-latest",       # el que se usa normalmente
+    "gemini-3-flash-preview",    # alternativa de la misma familia
+    "gemini-flash-lite-latest",  # más liviano y más rápido
+    "gemini-3.1-flash-lite",     # último recurso del día
 ]
 
-# Precios del nivel pago, en dólares por millón de tokens (agosto de 2026).
-# En el nivel gratuito el costo es cero; estas constantes existen para poder
-# mostrar cuánto costaría la herramienta si algún día tuviera que escalar.
-PRECIO_ENTRADA_POR_MILLON = 0.30
-PRECIO_SALIDA_POR_MILLON = 2.50
+# Precios del nivel pago de la familia Flash de Gemini 3, en dólares por millón
+# de tokens (agosto de 2026). En el nivel gratuito el costo es cero; estas
+# constantes existen para poder mostrar cuánto costaría la herramienta si algún
+# día tuviera que escalar más allá de los cupos gratuitos.
+PRECIO_ENTRADA_POR_MILLON = 0.75
+PRECIO_SALIDA_POR_MILLON = 3.75
 
 # Temperatura baja: buscamos un diagnóstico estable y reproducible, no
 # creatividad. El mismo correo debería recibir siempre una evaluación similar.
 TEMPERATURA = 0.2
 
+# Nivel de razonamiento previo del modelo. Se fija en bajo a propósito: medido
+# sobre los correos de ejemplo, el diagnóstico es igual de bueno (mismo nivel de
+# riesgo, mismas señales) pero la respuesta baja de 30-70 segundos a 4-8. Para
+# alguien que duda si hacer clic, esa diferencia importa más que un matiz.
+NIVEL_RAZONAMIENTO = "LOW"
+
 # Límite defensivo de caracteres del mensaje a analizar. Evita que un pegado
 # accidental de un archivo entero consuma la cuota diaria de una sola vez.
 MAX_CARACTERES = 12000
+
+# Los modelos gratuitos se saturan de a ratos y responden 503. Es un fallo
+# pasajero, así que antes de darse por vencida la app reintenta con el mismo
+# modelo y después pasa al siguiente de la lista.
+INTENTOS_POR_MODELO = 2
+ESPERA_ENTRE_INTENTOS = 2.0  # segundos
 
 
 class ErrorGuardIA(Exception):
@@ -169,31 +191,38 @@ def analizar_mensaje(cliente, cuerpo, remitente="", asunto="", enlaces=""):
         # de devolverla, así que el JSON siempre llega con la forma esperada.
         response_mime_type="application/json",
         response_schema=ESQUEMA_DIAGNOSTICO,
+        thinking_config=types.ThinkingConfig(thinking_level=NIVEL_RAZONAMIENTO),
     )
 
     respuesta, modelo_usado, ultimo_error = None, None, None
     for modelo in MODELOS_TEXTO:
-        try:
-            respuesta = cliente.models.generate_content(
-                model=modelo,
-                contents=mensaje_usuario,
-                config=configuracion,
-            )
-            modelo_usado = modelo
+        for intento in range(INTENTOS_POR_MODELO):
+            try:
+                respuesta = cliente.models.generate_content(
+                    model=modelo,
+                    contents=mensaje_usuario,
+                    config=configuracion,
+                )
+                modelo_usado = modelo
+                break
+            except Exception as error:  # noqa: BLE001 - se decide según el tipo
+                ultimo_error = error
+                # Problemas de clave, permisos o cuota son comunes a todos los
+                # modelos: reintentar no aporta nada y solo demora la respuesta.
+                if not _es_recuperable(error):
+                    raise ErrorGuardIA(_traducir_error(error)) from error
+                # Sobrecarga pasajera: esperamos un momento y reintentamos con
+                # el mismo modelo. Si en cambio se agotó su cuota diaria o el
+                # modelo ya no existe, reintentar es inútil: se pasa al siguiente.
+                if _es_sobrecarga(error) and intento + 1 < INTENTOS_POR_MODELO:
+                    time.sleep(ESPERA_ENTRE_INTENTOS)
+                    continue
+                break  # probamos el siguiente modelo de la lista
+        if respuesta is not None:
             break
-        except Exception as error:  # noqa: BLE001 - se prueba el siguiente modelo
-            ultimo_error = error
-            # Si el modelo no existe en esta cuenta, probamos el siguiente.
-            # Cualquier otro problema (clave, cuota, red) es común a todos:
-            # no tiene sentido reintentar y se informa de una vez.
-            if not _es_modelo_no_disponible(error):
-                raise ErrorGuardIA(_traducir_error(error)) from error
 
     if respuesta is None:
-        raise ErrorGuardIA(
-            "Ninguno de los modelos configurados está disponible en esta cuenta "
-            f"({', '.join(MODELOS_TEXTO)}). Detalle: {ultimo_error}"
-        )
+        raise ErrorGuardIA(_traducir_error(ultimo_error))
 
     contenido = respuesta.text
     if not contenido:
@@ -238,6 +267,19 @@ def _medir_uso(respuesta, modelo):
     }
 
 
+def _es_sobrecarga(error):
+    """Indica si el modelo está momentáneamente saturado.
+
+    Args:
+        error: excepción lanzada por el SDK.
+
+    Returns:
+        bool: True si vale la pena reintentar la misma llamada.
+    """
+    texto = str(error).lower()
+    return "503" in texto or "unavailable" in texto or "overloaded" in texto
+
+
 def _es_modelo_no_disponible(error):
     """Indica si el error significa que ese modelo puntual no existe.
 
@@ -249,6 +291,36 @@ def _es_modelo_no_disponible(error):
     """
     texto = str(error).lower()
     return "not_found" in texto or "404" in texto or "is not found" in texto
+
+
+def _es_cuota_agotada(error):
+    """Indica si el modelo agotó su cuota gratuita del día.
+
+    Args:
+        error: excepción lanzada por el SDK.
+
+    Returns:
+        bool: True si conviene pasar a otro modelo, que tiene su propio cupo.
+    """
+    texto = str(error).lower()
+    return "resource_exhausted" in texto or "429" in texto or "quota" in texto
+
+
+def _es_recuperable(error):
+    """Indica si tiene sentido seguir intentando con otro modelo u otra vuelta.
+
+    Args:
+        error: excepción lanzada por el SDK.
+
+    Returns:
+        bool: False para los errores que se van a repetir igual con cualquier
+        modelo (clave inválida, sin permisos): esos se informan de inmediato.
+    """
+    return (
+        _es_modelo_no_disponible(error)
+        or _es_sobrecarga(error)
+        or _es_cuota_agotada(error)
+    )
 
 
 def _traducir_error(error):
@@ -276,10 +348,23 @@ def _traducir_error(error):
             "La clave no tiene permiso para usar este modelo. Generá una nueva "
             "clave en Google AI Studio y volvé a cargarla."
         )
+    if "not_found" in texto or "404" in texto:
+        return (
+            "Ninguno de los modelos configurados está disponible para esta clave "
+            f"({', '.join(MODELOS_TEXTO)}). Google retira los modelos viejos para "
+            "las cuentas nuevas: revisá la lista MODELOS_TEXTO en analisis.py."
+        )
     if "resource_exhausted" in texto or "quota" in texto or "429" in texto:
         return (
-            "Se alcanzó el límite de consultas del nivel gratuito. Esperá un "
-            "minuto y volvé a intentar; el cupo diario se renueva cada día."
+            "Se agotó el cupo gratuito de hoy en todos los modelos disponibles "
+            f"({len(MODELOS_TEXTO)} modelos × 20 consultas por día). El cupo se "
+            "renueva a la medianoche del Pacífico, cerca de las 4 de la mañana "
+            "en Argentina."
+        )
+    if "503" in texto or "unavailable" in texto or "overloaded" in texto:
+        return (
+            "El servicio de IA está con mucha demanda en este momento. Esperá "
+            "unos segundos y volvé a intentar: suele resolverse solo."
         )
     if "connection" in texto or "timeout" in texto or "network" in texto:
         return (

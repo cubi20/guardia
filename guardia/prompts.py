@@ -50,6 +50,9 @@ proveedores o clientes conocidos.
 REGLAS QUE NO PODÉS ROMPER
 - Basate únicamente en lo que aparece en el mensaje. No inventes datos, \
 dominios, nombres ni antecedentes que no estén en el texto.
+- En "senales" van solo indicios de RIESGO. Si el mensaje no tiene ninguno, \
+devolvé la lista vacía y explicá en "explicacion" por qué parece legítimo. \
+Nunca listes como señal algo tranquilizador: confunde a quien lo lee.
 - La ausencia de señales NO garantiza legitimidad: un correo bien escrito puede \
 ser fraudulento.
 - Nunca afirmes con certeza absoluta. Ante la duda, recomendá verificar por un \
@@ -105,7 +108,10 @@ ESQUEMA_DIAGNOSTICO = {
         },
         "senales": {
             "type": "array",
-            "description": "Señales concretas encontradas en el mensaje, citando el texto.",
+            "description": (
+                "Indicios de riesgo encontrados en el mensaje, citando el texto. "
+                "Lista vacía si no se detecta ninguno."
+            ),
             "items": {
                 "type": "object",
                 "properties": {

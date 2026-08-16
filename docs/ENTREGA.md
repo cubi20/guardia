@@ -13,6 +13,9 @@ Lo que ya está hecho y lo que falta que hagas vos (necesita tus cuentas).
 - [x] Aplicación web con Streamlit: título, descripción, botón de acción y sección "Cómo funciona".
 - [x] Integración de IA con **salida dirigida** sobre `gemini-2.5-flash`.
 - [x] Costo de operación cero: nivel gratuito de la API + hosting sin cargo.
+- [x] **Probada contra la API real**: los cinco correos de ejemplo coincidieron
+      con la evaluación esperada, con 7 segundos de respuesta promedio.
+- [x] Clave de Gemini cargada en `.streamlit/secrets.toml`.
 - [x] Estructura visual: header, footer, paleta de colores propia.
 - [x] Código organizado y comentado, con la lógica separada de la interfaz.
 - [x] Repositorio publicado en GitHub: **https://github.com/cubi20/guardia** (público).
@@ -20,26 +23,22 @@ Lo que ya está hecho y lo que falta que hagas vos (necesita tus cuentas).
 
 ---
 
-## 1. Conseguir la clave de Gemini y probar la app (10 minutos)
+## 1. Probar la app en tu máquina ✅
 
-La clave es **gratuita y no pide tarjeta de crédito**:
-
-1. Entrá a [aistudio.google.com/apikey](https://aistudio.google.com/apikey) con tu cuenta de Google.
-2. **Create API key** → copiala.
-3. Abrí `.streamlit/secrets.toml` y pegala en la línea `GEMINI_API_KEY = ""`.
-
-Después:
+La clave ya está cargada en `.streamlit/secrets.toml` y la aplicación fue probada
+de punta a punta contra la API. Para levantarla cuando quieras:
 
 ```bash
 cd "/Users/agustin/Documents/Coder House/GuardIA" && ./venv/bin/python -m streamlit run app.py
 ```
 
-Probá los cinco ejemplos del selector. Los tres primeros deberían dar riesgo
-**alto**, el del turno médico **bajo** y el del paquete retenido **medio**. Si
-alguno no coincide, el prompt está en `guardia/prompts.py` y se puede ajustar.
+Los cinco ejemplos del selector dieron el resultado esperado: los cuatro fraudes
+como riesgo **alto** y el turno médico como **bajo**, sin señales falsas.
 
-Fijate también en la barra lateral: muestra los tokens consumidos y el costo
-equivalente en el nivel pago. Es la evidencia de la factibilidad económica.
+> **Ojo con el cupo:** el nivel gratuito da **20 consultas por día por modelo**.
+> La app usa cuatro modelos en cascada, así que el cupo real ronda las 80 diarias
+> y se renueva cerca de las 4 de la mañana (hora de Argentina). Si probás mucho
+> hoy, puede que se agote antes de la demostración.
 
 ---
 

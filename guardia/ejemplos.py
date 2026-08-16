@@ -83,7 +83,9 @@ EJEMPLOS = [
     },
     {
         "nombre": "Aviso de paquete retenido (smishing por SMS)",
-        "esperado": "medio",
+        # Al probar el prompt lo clasificó como alto, y tiene razón: el enlace
+        # no es el oficial y pide un pago. La expectativa inicial era "medio".
+        "esperado": "alto",
         "remitente": "+54 9 11 5555-0142",
         "asunto": "",
         "enlaces": "https://correo-arg.entrega-pendiente.net/pago",

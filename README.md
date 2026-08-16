@@ -37,7 +37,7 @@ más difícil el problema, tiene sentido usar esa misma tecnología para resolve
 
 ## Cómo se integra la IA
 
-El texto se envía a **`gemini-2.5-flash`** junto con un prompt que le asigna el
+El texto se envía a **`gemini-flash-latest`** (familia Flash de Gemini 3) junto con un prompt que le asigna el
 rol de analista de ciberseguridad, le da un checklist de qué evaluar y le
 prohíbe inventar datos o afirmar con certeza absoluta.
 
@@ -124,24 +124,25 @@ streamlit run app.py
 
 ## Factibilidad económica
 
-**El costo de operación es cero.** El nivel gratuito de la API de Gemini cubre
-holgadamente el uso previsto de la herramienta y el hosting en Streamlit
-Community Cloud tampoco tiene costo: no hace falta tarjeta de crédito para poner
-la aplicación en producción.
+**El costo de operación es cero.** El nivel gratuito de la API de Gemini da 20
+consultas por día **por modelo**, y la aplicación usa cuatro en cascada, así que
+el cupo real ronda las 80 diarias. El hosting en Streamlit Community Cloud
+tampoco tiene costo: no hace falta tarjeta de crédito para poner la aplicación
+en producción.
 
-Como referencia de escalabilidad, cada análisis consume alrededor de 1.500
-tokens de entrada y 500 de salida:
+Como referencia de escalabilidad, medido sobre los cinco correos de ejemplo cada
+análisis consume unos 1.250 tokens:
 
 | Concepto | Nivel gratuito | Equivalente en nivel pago |
 |---|---|---|
-| Un análisis (`gemini-2.5-flash`) | US$ 0 | ≈ US$ 0,0017 |
-| 500 análisis por mes | US$ 0 | ≈ US$ 0,85 |
-| 5.000 análisis por mes | US$ 0 | ≈ US$ 8,50 |
+| Un análisis | US$ 0 | ≈ US$ 0,0022 |
+| 500 análisis por mes | US$ 0 | ≈ US$ 1,12 |
+| 5.000 análisis por mes | US$ 0 | ≈ US$ 11,20 |
 | Hosting (Streamlit Community Cloud) | US$ 0 | US$ 0 |
 | Repositorio (GitHub) y entorno (Python, VS Code) | US$ 0 | US$ 0 |
 
-Precios del nivel pago vigentes en agosto de 2026: US$ 0,30 por millón de tokens
-de entrada y US$ 2,50 por millón de salida para `gemini-2.5-flash`. La
+Precios del nivel pago vigentes en agosto de 2026: US$ 0,75 por millón de tokens
+de entrada y US$ 3,75 por millón de salida para la familia Flash de Gemini 3. La
 aplicación **mide los tokens realmente consumidos** en cada consulta y muestra su
 costo equivalente en la barra lateral.
 
@@ -158,9 +159,9 @@ costo equivalente en la barra lateral.
 - **Privacidad:** el texto se envía a la API de Google Gemini. No debe pegarse
   información confidencial innecesaria; en un uso productivo correspondería
   anonimizar los datos sensibles.
-- **El nivel gratuito tiene cupos** de consultas por minuto y por día. Son
-  holgados para el uso de una PyME, pero un pico de tráfico podría agotarlos
-  temporalmente.
+- **El nivel gratuito tiene cupo diario:** 20 consultas por día por modelo. La
+  cascada de cuatro modelos lo multiplica, pero un pico de tráfico podría
+  agotarlo; se renueva a la medianoche del Pacífico.
 - **El phishing evoluciona:** el prompt y los ejemplos deben mantenerse
   actualizados para no perder efectividad.
 
@@ -186,6 +187,8 @@ propuesta de valor.
 | Lenguaje simple obligatorio | El destinatario es un empleado sin perfil técnico. |
 | Delimitadores `<<<MENSAJE>>>` | Protegen contra inyección de prompt: si el correo contiene órdenes dirigidas a una IA, se tratan como una señal de riesgo, no como instrucciones. |
 | Temperatura 0.2 | Buscamos un diagnóstico estable y reproducible, no creatividad. |
+| Razonamiento en nivel bajo | Medido sobre los ejemplos, el diagnóstico es igual de bueno pero la respuesta baja de 30-70 s a 4-8 s. |
+| Cascada de cuatro modelos | Cubre las caídas por sobrecarga (503) y multiplica el cupo diario gratuito. |
 
 ---
 

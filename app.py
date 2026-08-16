@@ -169,6 +169,23 @@ for clave, valor in VALORES_INICIALES.items():
     st.session_state.setdefault(clave, valor)
 
 
+def formato_numero(valor, decimales=0):
+    """Formatea un número al estilo local: punto para miles, coma para decimales.
+
+    Python formatea al estilo inglés (1,309.5) y la app está escrita en español,
+    donde se escribe 1.309,5. Se formatea primero al estilo inglés y después se
+    intercambian los separadores.
+
+    Args:
+        valor: número a formatear.
+        decimales: cantidad de decimales a mostrar.
+
+    Returns:
+        str: el número listo para mostrar en pantalla.
+    """
+    return f"{valor:,.{decimales}f}".translate(str.maketrans({",": ".", ".": ","}))
+
+
 def obtener_api_key():
     """Busca la clave de API en los secretos de Streamlit o en el entorno.
 
@@ -252,13 +269,13 @@ with st.sidebar:
     st.markdown("### Consumo de esta sesión")
     columna_a, columna_b = st.columns(2)
     columna_a.metric("Análisis", st.session_state["consultas"])
-    columna_b.metric("Costo", "US$ 0")
+    columna_b.metric("Costo", "US$ 0")  # nivel gratuito: siempre cero
     st.caption(
         f"Modelo `{MODELO_TEXTO}`, nivel gratuito: las consultas no tienen costo. "
-        f"Los {st.session_state['tokens_total']:,} tokens usados en esta sesión "
-        f"equivaldrían a US$ {st.session_state['costo_total']:.4f} en el nivel "
-        "pago, que es la referencia para estimar cuánto costaría escalar la "
-        "herramienta."
+        f"Los {formato_numero(st.session_state['tokens_total'])} tokens usados en "
+        f"esta sesión equivaldrían a US$ "
+        f"{formato_numero(st.session_state['costo_total'], 4)} en el nivel pago, "
+        "que es la referencia para estimar cuánto costaría escalar la herramienta."
     )
 
     st.divider()
@@ -349,6 +366,9 @@ with pestana_analizar:
                 uso["tokens_entrada"] + uso["tokens_salida"]
             )
             st.session_state["costo_total"] += uso["costo_usd"]
+            # La barra lateral se dibuja antes que esta parte del script, así que
+            # sin este rerun el contador de consumo quedaría una consulta atrasado.
+            st.rerun()
         except ErrorGuardIA as error:
             st.error(str(error), icon="⚠️")
 
@@ -463,10 +483,10 @@ with pestana_analizar:
             if uso:
                 st.caption(
                     f"Consulta procesada con `{uso['modelo']}` · "
-                    f"{uso['tokens_entrada']} tokens de entrada + "
-                    f"{uso['tokens_salida']} de salida · "
+                    f"{formato_numero(uso['tokens_entrada'])} tokens de entrada + "
+                    f"{formato_numero(uso['tokens_salida'])} de salida · "
                     f"costo US$ 0 (nivel gratuito; equivaldría a "
-                    f"US$ {uso['costo_usd']:.5f} en el nivel pago)"
+                    f"US$ {formato_numero(uso['costo_usd'], 5)} en el nivel pago)"
                 )
 
 
@@ -563,6 +583,9 @@ with pestana_como:
         "defensas no llegan: la decisión de la persona.\n"
         "- **El phishing evoluciona.** El prompt y los ejemplos se actualizan para "
         "no perder efectividad.\n"
+        "- **El nivel gratuito tiene cupo diario.** Son 20 consultas por día por "
+        "modelo; la app usa varios en cascada, así que el cupo real es mayor. Si "
+        "se agota, se renueva a la madrugada.\n"
         "- **Privacidad:** el texto se envía a la API de Google Gemini para su "
         "análisis. No pegues información confidencial que no sea necesaria."
     )
@@ -612,15 +635,17 @@ with pestana_acerca:
     st.markdown("### Factibilidad económica")
     st.markdown(
         "**El costo de operación es cero.** El nivel gratuito de la API de "
-        "Gemini cubre holgadamente el uso previsto de la herramienta, y el "
-        "hosting en Streamlit Community Cloud tampoco tiene costo."
+        "Gemini cubre el uso previsto de la herramienta —20 consultas por día "
+        "por modelo, y la app usa varios en cascada— y el hosting en Streamlit "
+        "Community Cloud tampoco tiene costo. No hace falta tarjeta de crédito "
+        "para poner la aplicación en producción."
     )
     st.markdown(
-        f"Como referencia de escalabilidad: cada análisis consume alrededor de "
-        f"1.500 tokens de entrada y 500 de salida. En el nivel pago "
+        f"Como referencia de escalabilidad: medido sobre los correos de ejemplo, "
+        f"cada análisis consume unos 1.250 tokens. En el nivel pago "
         f"(US$ {PRECIO_ENTRADA_POR_MILLON:.2f} y "
         f"US$ {PRECIO_SALIDA_POR_MILLON:.2f} por millón de tokens de entrada y "
-        "salida) eso serían unos **US$ 0,0017 por consulta**, es decir menos de "
+        "salida) eso serían unos **US$ 0,0022 por consulta**, poco más de "
         "**US$ 1 al mes** con 500 análisis. Incluso pagando, el costo es "
         "marginal frente al de un solo incidente de seguridad."
     )
