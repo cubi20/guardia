@@ -656,8 +656,8 @@ with pestana_acerca:
     st.markdown(
         f"Como referencia de escalabilidad: medido sobre los correos de ejemplo, "
         f"cada análisis consume unos 1.250 tokens. En el nivel pago "
-        f"(US\\$ {PRECIO_ENTRADA_POR_MILLON:.2f} y "
-        f"US\\$ {PRECIO_SALIDA_POR_MILLON:.2f} por millón de tokens de entrada y "
+        f"(US\\$ {formato_numero(PRECIO_ENTRADA_POR_MILLON, 2)} y "
+        f"US\\$ {formato_numero(PRECIO_SALIDA_POR_MILLON, 2)} por millón de tokens de entrada y "
         "salida) eso serían unos **US\\$ 0,0022 por consulta**, poco más de "
         "**US\\$ 1 al mes** con 500 análisis. Incluso pagando, el costo es "
         "marginal frente al de un solo incidente de seguridad."
