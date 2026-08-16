@@ -15,7 +15,7 @@ Lo que ya está hecho y lo que falta que hagas vos (necesita tus cuentas).
 - [x] Costo de operación cero: nivel gratuito de la API + hosting sin cargo.
 - [x] Estructura visual: header, footer, paleta de colores propia.
 - [x] Código organizado y comentado, con la lógica separada de la interfaz.
-- [x] Repositorio git inicializado con el primer commit.
+- [x] Repositorio publicado en GitHub: **https://github.com/cubi20/guardia** (público).
 - [x] Presentación de documentación: `docs/GuardIA-ProyectoFinal-IdoyagaMolina.pptx`.
 
 ---
@@ -43,17 +43,17 @@ equivalente en el nivel pago. Es la evidencia de la factibilidad económica.
 
 ---
 
-## 2. Subir el código a GitHub
+## 2. Subir el código a GitHub ✅
 
-Creá un repositorio **público** vacío en GitHub llamado `guardia` (sin README,
-sin .gitignore) y después:
+Ya está hecho: el repositorio es **https://github.com/cubi20/guardia**, es público
+y tiene los 17 archivos del proyecto. La clave de API no se subió (`secrets.toml`
+está en `.gitignore`).
+
+Para subir cambios más adelante:
 
 ```bash
-cd "/Users/agustin/Documents/Coder House/GuardIA" && git remote add origin https://github.com/TU-USUARIO/guardia.git && git push -u origin main
+cd "/Users/agustin/Documents/Coder House/GuardIA" && git add -A && git commit -m "descripción del cambio" && git push
 ```
-
-> El archivo `.streamlit/secrets.toml` está en `.gitignore`: tu clave **no** se
-> sube. Verificalo con `git status` antes de pushear.
 
 ---
 
@@ -61,7 +61,7 @@ cd "/Users/agustin/Documents/Coder House/GuardIA" && git remote add origin https
 
 1. Entrá a [share.streamlit.io](https://share.streamlit.io) con tu cuenta (usuario `cubi20`).
 2. **Create app** → **Deploy a public app from GitHub**.
-3. Repositorio: `TU-USUARIO/guardia` · Rama: `main` · Archivo: `app.py`.
+3. Repositorio: `cubi20/guardia` · Rama: `main` · Archivo: `app.py`.
 4. **Advanced settings → Secrets**, pegá:
 
    ```toml
@@ -83,7 +83,7 @@ Abrí `docs/GuardIA-ProyectoFinal-IdoyagaMolina.pptx` y andá a la **lámina 15
 | Campo | Qué poner |
 |---|---|
 | Aplicación desplegada | La URL real de Streamlit del paso 3 |
-| Código fuente | La URL real del repositorio de GitHub del paso 2 |
+| Código fuente | ✅ Ya está puesta: `https://github.com/cubi20/guardia` |
 | Demostración | El enlace al video, o borrá esa tarjeta si no vas a grabarlo |
 
 Después borrá la línea roja de advertencia que está debajo de las tarjetas.
@@ -121,7 +121,7 @@ Comentador**:
 ## 7. Antes de entregar, revisá
 
 - [ ] La app abre desde el enlace de Streamlit y analiza un correo de prueba.
-- [ ] El repositorio de GitHub es público y **no** contiene la clave de API.
+- [x] El repositorio de GitHub es público y **no** contiene la clave de API.
 - [ ] Las tres direcciones de la lámina 15 son las reales.
 - [ ] El enlace de Google Slides está en modo **Comentador**.
 - [ ] Los datos de la portada están bien (nombre, comisión #95920).

@@ -9,6 +9,7 @@ qué señales concretas se detectaron, una explicación en lenguaje simple y qu�
 hacer al respecto**.
 
 🔗 **App en línea:** _(completar con el enlace de Streamlit Community Cloud)_
+📦 **Código fuente:** https://github.com/cubi20/guardia
 
 ---
 
@@ -89,7 +90,7 @@ implicaría reescribir `analisis.py` y ningún otro archivo.
 ## Cómo ejecutarlo localmente
 
 ```bash
-git clone https://github.com/<tu-usuario>/guardia.git
+git clone https://github.com/cubi20/guardia.git
 cd guardia
 python3 -m venv venv
 source venv/bin/activate          # en Windows: venv\Scripts\activate
