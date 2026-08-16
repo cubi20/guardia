@@ -1,6 +1,6 @@
 # Borrador de post para LinkedIn
 
-> **Antes de publicar:** reemplazá `[LINK DE LA APP]` y `[LINK DEL REPO]`.
+> **Antes de publicar:** reemplazá `https://guardia-iayvrupcyvzqzibgemf7l7.streamlit.app` y `https://github.com/cubi20/guardia`.
 > LinkedIn **no interpreta markdown**: el texto de abajo ya está en texto plano,
 > pegalo tal cual. Subí `guardia-demo.mp4` como video del post.
 
@@ -14,7 +14,7 @@ Si la IA volvió el problema más difícil, tiene sentido usar la misma tecnolog
 
 Eso es GuardIA: pegás un correo que te genera dudas y en segundos tenés el nivel de riesgo, las señales concretas que lo delatan, una explicación sin jerga técnica y qué hacer al respecto. Pensada para PyMEs, que son el eslabón más vulnerable justamente porque no tienen equipo de seguridad ni presupuesto para herramientas comerciales.
 
-Probala acá: [LINK DE LA APP]
+Probala acá: https://guardia-iayvrupcyvzqzibgemf7l7.streamlit.app
 
 Cuatro decisiones técnicas, que me parecen la parte interesante:
 
@@ -28,7 +28,7 @@ Cuatro decisiones técnicas, que me parecen la parte interesante:
 
 Los límites, que en seguridad importan tanto como las funciones: es un asistente, no un veredicto. Puede equivocarse en las dos direcciones, así que siempre recomienda verificar por un canal oficial. Analiza texto, no abre adjuntos ni sigue enlaces. Y no reemplaza al antivirus, al filtro de correo ni al MFA: los complementa exactamente donde esas defensas no llegan, que es la decisión de la persona frente a la pantalla.
 
-Python, Streamlit y la API de Gemini. Código abierto: [LINK DEL REPO]
+Python, Streamlit y la API de Gemini. Código abierto: https://github.com/cubi20/guardia
 
 Si la probás, no pegues información confidencial: el texto se envía a la API para el análisis.
 

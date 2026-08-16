@@ -8,7 +8,7 @@ sospechoso y, en segundos, recibe un diagnóstico claro: **qué tan riesgoso es,
 qué señales concretas se detectaron, una explicación en lenguaje simple y qué
 hacer al respecto**.
 
-🔗 **App en línea:** _(completar con el enlace de Streamlit Community Cloud)_
+🔗 **App en línea:** https://guardia-iayvrupcyvzqzibgemf7l7.streamlit.app
 📦 **Código fuente:** https://github.com/cubi20/guardia
 
 ---

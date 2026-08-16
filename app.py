@@ -311,41 +311,49 @@ with pestana_analizar:
         "correos legítimos, para ver cómo responde la herramienta en ambos casos.",
     )
 
-    st.text_area(
-        "Cuerpo del mensaje *",
-        key="cuerpo",
-        height=220,
-        placeholder="Pegá acá el texto completo del correo o del mensaje…",
-    )
-
-    with st.expander("Agregar remitente, asunto y enlaces (recomendado)"):
-        st.caption(
-            "Cuantos más datos aportes, más precisa es la evaluación: buena parte "
-            "de las señales de phishing están en el remitente y en los enlaces."
-        )
-        st.text_input(
-            "Remitente",
-            key="remitente",
-            placeholder="Nombre <direccion@dominio.com> o número de teléfono",
-        )
-        st.text_input("Asunto", key="asunto", placeholder="Asunto del correo")
+    # Los campos y el botón van dentro de un formulario a propósito. Fuera de él,
+    # Streamlit no toma el texto del área hasta que pierde el foco: el primer clic
+    # en "Analizar" solo confirmaba el texto y había que apretar dos veces. Dentro
+    # del formulario, el envío confirma todos los campos y dispara el análisis en
+    # una sola acción, que es lo que espera cualquier persona que lo usa.
+    with st.form("formulario_analisis", border=False):
         st.text_area(
-            "Enlaces incluidos",
-            key="enlaces",
-            height=80,
-            placeholder="Pegá acá las URLs del mensaje, una por línea",
+            "Cuerpo del mensaje *",
+            key="cuerpo",
+            height=220,
+            placeholder="Pegá acá el texto completo del correo o del mensaje…",
         )
 
-    # --- Botón de acción principal (requisito de la consigna) --------------
-    columna_analizar, columna_limpiar = st.columns([3, 1])
-    with columna_analizar:
-        analizar = st.button(
-            "🔍  Analizar mensaje",
-            type="primary",
-            use_container_width=True,
-        )
-    with columna_limpiar:
-        st.button("Limpiar", on_click=limpiar_formulario, use_container_width=True)
+        with st.expander("Agregar remitente, asunto y enlaces (recomendado)"):
+            st.caption(
+                "Cuantos más datos aportes, más precisa es la evaluación: buena parte "
+                "de las señales de phishing están en el remitente y en los enlaces."
+            )
+            st.text_input(
+                "Remitente",
+                key="remitente",
+                placeholder="Nombre <direccion@dominio.com> o número de teléfono",
+            )
+            st.text_input("Asunto", key="asunto", placeholder="Asunto del correo")
+            st.text_area(
+                "Enlaces incluidos",
+                key="enlaces",
+                height=80,
+                placeholder="Pegá acá las URLs del mensaje, una por línea",
+            )
+
+        # --- Botón de acción principal (requisito de la consigna) ----------
+        columna_analizar, columna_limpiar = st.columns([3, 1])
+        with columna_analizar:
+            analizar = st.form_submit_button(
+                "🔍  Analizar mensaje",
+                type="primary",
+                use_container_width=True,
+            )
+        with columna_limpiar:
+            st.form_submit_button(
+                "Limpiar", on_click=limpiar_formulario, use_container_width=True
+            )
 
     # --- Ejecución del análisis -------------------------------------------
     if analizar:
