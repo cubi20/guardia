@@ -1,0 +1,14 @@
+# Paleta de colores de GuardIA.
+# Azul profundo para transmitir confianza y seguridad, verde azulado para las
+# acciones. Definirla acá hace que Streamlit la aplique a todos los widgets
+# (botones, foco de los campos, barras) sin repetir CSS.
+
+[theme]
+primaryColor = "#1F7A8C"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F7F9"
+textColor = "#26323E"
+font = "sans serif"
+
+[server]
+maxUploadSize = 5

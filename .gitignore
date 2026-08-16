@@ -1,0 +1,22 @@
+# Secretos: la clave de la API NUNCA se sube al repositorio
+.streamlit/secrets.toml
+.env
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Sistema operativo / editores
+.DS_Store
+.vscode/
+.idea/
+
+# Salidas generadas por la app durante las pruebas
+*.png
+!docs/*.png
