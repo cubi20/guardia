@@ -1,14 +1,30 @@
 # 🛡️ GuardIA — Asistente anti-phishing con IA para PyMEs
 
-> **Pre-entrega N°2 · Fast Prompting en acción**
-> Inteligencia Artificial: Generación de Prompts — CoderHouse
-> Estudiante: **Agustín Idoyaga Molina** · Comisión **#95920**
+> **Diplomatura en Inteligencia Artificial — CoderHouse**
+> Curso: *Inteligencia artificial: Generación de Prompts* · Comisión **#95920**
+> Estudiante: **Agustín Idoyaga Molina**
 
-| | |
+Una aplicación web donde cualquier empleado pega un correo o mensaje sospechoso y recibe,
+en segundos, un diagnóstico claro: qué tan riesgoso es, qué señales concretas se
+detectaron, una explicación en lenguaje simple y una recomendación de qué hacer.
+
+## Contenido del repositorio
+
+Este repositorio reúne todo el proyecto a lo largo del cursado. Según qué estés buscando:
+
+| Entregable | Dónde está |
 |---|---|
-| 📓 **Prueba de concepto** | [`notebooks/GuardIA_FastPrompting.ipynb`](notebooks/GuardIA_FastPrompting.ipynb) |
-| 🔗 **Aplicación en línea** | https://guardia-iayvrupcyvzqzibgemf7l7.streamlit.app |
+| 🔗 **Aplicación desplegada** | https://guardia-iayvrupcyvzqzibgemf7l7.streamlit.app |
+| 💻 **Código fuente de la app** | [`app.py`](app.py) y el paquete [`guardia/`](guardia/) |
+| 📓 **Prueba de concepto — Fast Prompting** | [`notebooks/GuardIA_FastPrompting.ipynb`](notebooks/GuardIA_FastPrompting.ipynb) |
+| 📊 **Presentación del Proyecto Final** | [`docs/GuardIA-ProyectoFinal-IdoyagaMolina.pptx`](docs/) |
 | 🎬 **Video demostrativo** | [`docs/guardia-demo.mp4`](docs/guardia-demo.mp4) |
+
+El historial de commits documenta cómo evolucionó el proyecto y por qué se tomó cada
+decisión técnica, incluidos los problemas que aparecieron al probarlo contra la API real.
+
+La documentación que sigue describe el proyecto completo: el problema, la propuesta, la
+viabilidad, la metodología, las herramientas y la implementación.
 
 ---
 
