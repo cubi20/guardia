@@ -16,7 +16,7 @@ Este repositorio reúne todo el proyecto a lo largo del cursado. Según qué est
 |---|---|
 | 🔗 **Aplicación desplegada** | https://guardia-iayvrupcyvzqzibgemf7l7.streamlit.app |
 | 💻 **Código fuente de la app** | [`app.py`](app.py) y el paquete [`guardia/`](guardia/) |
-| 📓 **Prueba de concepto — Fast Prompting** | [`notebooks/GuardIA_FastPrompting.ipynb`](notebooks/GuardIA_FastPrompting.ipynb) |
+| 📓 **Prueba de concepto — Fast Prompting** | [`notebooks/GuardIA_FastPrompting.ipynb`](notebooks/GuardIA_FastPrompting.ipynb) · [versión PDF](docs/GuardIA-Preentrega2-Notebook.pdf) |
 | 📊 **Presentación del Proyecto Final** | [`docs/GuardIA-ProyectoFinal-IdoyagaMolina.pptx`](docs/) |
 | 🎬 **Video demostrativo** | [`docs/guardia-demo.mp4`](docs/guardia-demo.mp4) |
 
