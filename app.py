@@ -2,7 +2,7 @@
 GuardIA — Asistente anti-phishing con IA para PyMEs.
 Interfaz web construida con Streamlit.
 
-Proyecto Final · Prompt Engineering para Programadores (CoderHouse)
+Proyecto Final · Inteligencia artificial: Generación de Prompts (CoderHouse)
 Autor: Agustín Idoyaga Molina — Comisión #95920
 
 La aplicación resuelve una tarea específica: un empleado pega un correo o
@@ -610,8 +610,8 @@ with pestana_como:
 with pestana_acerca:
     st.markdown("## Acerca del proyecto")
     st.markdown(
-        "**GuardIA** es el Proyecto Final del curso *Prompt Engineering para "
-        "Programadores* de la Diplomatura en Inteligencia Artificial de CoderHouse."
+        "**GuardIA** es el Proyecto Final del curso *Inteligencia artificial: Generación de Prompts* "
+        "de la Diplomatura en Inteligencia Artificial de CoderHouse."
     )
     st.markdown(
         "- **Estudiante:** Agustín Idoyaga Molina\n"
@@ -694,7 +694,7 @@ st.markdown(
     f"""
     <div class="guardia-footer">
         <strong>GuardIA</strong> · Seguridad al alcance de cualquier PyME<br>
-        Proyecto Final — Prompt Engineering para Programadores · CoderHouse ·
+        Proyecto Final — Inteligencia artificial: Generación de Prompts · CoderHouse ·
         Agustín Idoyaga Molina (Comisión #95920)<br>
         Análisis asistido por inteligencia artificial. Los resultados son
         orientativos: ante la duda, verificá por un canal oficial.
