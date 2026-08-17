@@ -1,53 +1,74 @@
 # 🛡️ GuardIA — Asistente anti-phishing con IA para PyMEs
 
-> Proyecto Final · **Prompt Engineering para Programadores** — Diplomatura en Inteligencia Artificial, CoderHouse
+> **Pre-entrega N°2 · Fast Prompting en acción**
+> Inteligencia Artificial: Generación de Prompts — CoderHouse
 > Estudiante: **Agustín Idoyaga Molina** · Comisión **#95920**
-
-GuardIA es una aplicación web donde cualquier empleado pega un correo o mensaje
-sospechoso y, en segundos, recibe un diagnóstico claro: **qué tan riesgoso es,
-qué señales concretas se detectaron, una explicación en lenguaje simple y qué
-hacer al respecto**.
-
-🔗 **App en línea:** https://guardia-iayvrupcyvzqzibgemf7l7.streamlit.app
-📦 **Código fuente:** https://github.com/cubi20/guardia
-
----
-
-## El problema
-
-El phishing es una de las principales puertas de entrada a los ataques
-informáticos, y las PyMEs son el eslabón más vulnerable: rara vez tienen equipo
-de seguridad, plan de capacitación o presupuesto para herramientas comerciales.
-Según el *Verizon Data Breach Investigations Report* 2025, alrededor del **60%**
-de las brechas involucran el factor humano y el **88%** de las brechas en
-pequeñas y medianas empresas incluyen ransomware, que muchas veces empieza con
-un simple correo.
-
-La paradoja: la IA generativa volvió el phishing mucho más convincente, porque
-los mensajes fraudulentos ya no se detectan por su mala redacción. Si la IA hizo
-más difícil el problema, tiene sentido usar esa misma tecnología para resolverlo.
-
-## La solución
 
 | | |
 |---|---|
-| **1. Pegás el mensaje** | El correo o mensaje que genera dudas, con remitente y enlaces si los hay. |
-| **2. La IA lo analiza** | Revisa dominio del remitente, urgencia, qué se pide, enlaces y redacción. |
-| **3. Recibís el veredicto** | Nivel de riesgo, señales concretas, explicación simple y qué hacer ahora. |
+| 📓 **Prueba de concepto** | [`notebooks/GuardIA_FastPrompting.ipynb`](notebooks/GuardIA_FastPrompting.ipynb) |
+| 🔗 **Aplicación en línea** | https://guardia-iayvrupcyvzqzibgemf7l7.streamlit.app |
+| 🎬 **Video demostrativo** | [`docs/guardia-demo.mp4`](docs/guardia-demo.mp4) |
 
-## Cómo se integra la IA
+---
 
-El texto se envía a **`gemini-flash-latest`** (familia Flash de Gemini 3) junto con un prompt que le asigna el
-rol de analista de ciberseguridad, le da un checklist de qué evaluar y le
-prohíbe inventar datos o afirmar con certeza absoluta.
+## 1. Introducción
 
-### Salida dirigida
+### 1.1 Nombre del proyecto
 
-En lugar de pedirle al modelo "respondeme en JSON" y confiar en que obedezca, se
-envía un **esquema de respuesta** junto con la consulta
-(`response_schema` + `response_mime_type="application/json"`) y la API garantiza
-que el resultado lo cumpla. Así la interfaz siempre recibe la misma estructura y
-puede dibujarla igual en todos los casos, sin parsear texto libre.
+**GuardIA** — de *guardia*, quien vigila y avisa, e *IA*.
+
+Una aplicación web donde cualquier empleado pega un correo o mensaje sospechoso y recibe,
+en segundos, un diagnóstico claro: qué tan riesgoso es, qué señales concretas se
+detectaron, una explicación en lenguaje simple y una recomendación de qué hacer.
+
+### 1.2 Presentación del problema a abordar
+
+El phishing son correos o mensajes que se hacen pasar por una entidad confiable —un banco,
+un proveedor, un cliente o incluso un compañero de trabajo— para que la persona haga clic
+en un enlace, descargue un archivo o entregue sus credenciales.
+
+**El problema no es tecnológico sino humano.** Por más filtros que tenga una empresa,
+siempre hay un mensaje que llega a la bandeja de entrada y una persona que debe decidir, en
+pocos segundos, si es legítimo o no. Los datos del *Verizon Data Breach Investigations
+Report* (DBIR) 2025 lo dimensionan:
+
+| Dato | Valor |
+|---|---|
+| Brechas de datos que involucran el factor humano | ~60% |
+| Brechas en PyMEs que incluyen ransomware | 88% |
+| Crecimiento del phishing en el último período | ≈ ×3 |
+
+**Por qué esta problemática.** Afecta con especial dureza a las PyMEs, que son el eslabón
+más débil: rara vez tienen equipo de seguridad, plan de capacitación o presupuesto para
+herramientas comerciales, y sin embargo manejan datos de clientes, facturación y
+transferencias. Un solo incidente puede paralizar su operación durante días. Además es una
+problemática que conozco de cerca: curso la Licenciatura en Ciberseguridad y trabajo en el
+área administrativa de una clínica, donde veo a diario circular correos con pedidos de
+pagos, remitos y facturas.
+
+**Por qué es relevante resolverla.** La IA generativa volvió el phishing mucho más
+convincente: los mensajes fraudulentos ya no se detectan por su mala redacción. Si la IA
+hizo más difícil el problema, tiene sentido usar esa misma tecnología para resolverlo. Y a
+diferencia de una capacitación anual, que se olvida, una herramienta de consulta está
+disponible siempre que aparece la duda.
+
+### 1.3 Desarrollo de la propuesta de solución
+
+La solución se apoya en un **modelo de lenguaje (texto → texto)** al que se le entrega el
+mensaje sospechoso junto con un prompt especializado. El modelo lo evalúa y devuelve un
+diagnóstico **estructurado**, que la aplicación siempre muestra de la misma manera.
+
+El prompt hace tres cosas a la vez:
+
+1. **Sitúa al modelo** en el rol de analista de ciberseguridad experto.
+2. **Le da un checklist** de qué evaluar: remitente, urgencia, pedidos sensibles, enlaces,
+   redacción y suplantación de autoridad.
+3. **Le impone reglas** contra las alucinaciones: no inventar datos, no afirmar con certeza
+   absoluta y recomendar siempre verificar por un canal oficial.
+
+La respuesta se pide con **salida dirigida**: junto con la consulta se envía el esquema que
+debe cumplir el JSON, y la API garantiza que lo cumpla.
 
 ```json
 {
@@ -61,136 +82,155 @@ puede dibujarla igual en todos los casos, sin parsear texto libre.
 }
 ```
 
-El orden de los campos no es casual: `propertyOrdering` hace que el modelo
-primero detecte las señales, después puntúe y recién al final redacte la
-explicación, de modo que el texto se apoye en lo que ya identificó.
+El orden de los campos no es casual: `propertyOrdering` hace que el modelo detecte las
+señales **antes** de puntuar y de redactar, de modo que el texto se apoye en lo que ya
+identificó en lugar de justificar a posteriori.
 
-## Estructura del proyecto
+### 1.4 Justificación de la viabilidad del proyecto
+
+**Técnica.** Se apoya en herramientas que ya manejo y están disponibles gratis: Python con
+Streamlit para la interfaz y la API de Gemini para el análisis. El alcance está acotado a
+propósito: la app analiza texto pegado por el usuario, no se conecta al servidor de correo,
+no requiere infraestructura propia ni base de datos, y no depende de permisos de
+administrador en la empresa.
+
+**Económica.** El nivel gratuito de la API da **20 consultas por día por modelo**; la app
+encadena cuatro modelos, así que el cupo real ronda las 80 diarias, sin tarjeta de crédito.
+El hosting en Streamlit Community Cloud tampoco cuesta nada. El notebook mide el consumo
+real y proyecta el escalado.
+
+**Recursos y tiempo.** Desarrollado en paralelo al cursado, sin hardware especial ni
+licencias pagas: alcanza con una computadora y las cuentas gratuitas de Google AI Studio,
+Streamlit y GitHub.
+
+## 2. Objetivos
+
+**General.** Poner el conocimiento de seguridad al alcance de quien no lo tiene, exactamente
+en el momento en que necesita decidir si hacer clic.
+
+**Específicos:**
+
+1. Demostrar las técnicas de *fast prompting* aplicadas al problema: role prompting,
+   checklist explícito, salida dirigida por esquema y control de alucinaciones.
+2. Experimentar con distintas configuraciones de prompt y medir qué aporta cada una, en
+   calidad del diagnóstico y en tokens.
+3. Optimizar la cantidad de consultas a la API y cuantificar el ahorro.
+4. Validar el prompt con casos reales, midiendo aciertos y falsos positivos.
+
+## 3. Metodología
+
+| Etapa | Qué se hace | Cómo se mide |
+|---|---|---|
+| **1. Línea de base** | Un prompt ingenuo, del tipo "decime si esto es phishing" | Si la salida es utilizable por un programa |
+| **2. Refinamiento** | Se agregan rol, checklist y salida dirigida, de a una técnica por vez | Tokens, parseabilidad, calidad |
+| **3. Optimización** | Una llamada estructurada contra encadenar varias | Consultas, tokens y costo por análisis |
+| **4. Validación** | El prompt final sobre correos etiquetados | Aciertos, falsos positivos y negativos |
+
+La regla que atraviesa todo: **cada mejora tiene que justificarse con un número.** Un prompt
+más largo cuesta más tokens de entrada, así que solo vale la pena si el resultado lo paga.
+
+## 4. Herramientas y tecnologías
+
+| Herramienta | Para qué | Por qué esta |
+|---|---|---|
+| **Python 3** | Lenguaje del proyecto | Es el del SDK y del ecosistema |
+| **Google Gemini** (familia Flash) | Modelo texto → texto | Nivel gratuito real y soporte de salida dirigida |
+| **`google-genai`** | SDK oficial | Expone `response_schema`, la técnica central del proyecto |
+| **Jupyter Notebook** | Prueba de concepto | Prompt, resultado y medición en un mismo lugar |
+| **Streamlit** | Interfaz web | Interfaz funcional con pocas líneas, sin frontend aparte |
+| **GitHub** | Control de versiones | El historial documenta cada ajuste y su porqué |
+
+### Técnicas de prompting utilizadas
+
+| Técnica | Cómo se aplica | Qué problema resuelve |
+|---|---|---|
+| **Role prompting** | "Sos un analista de ciberseguridad experto…" | Sitúa al modelo en el dominio correcto |
+| **Checklist explícito** | Seis puntos a evaluar | Reduce la variabilidad entre análisis |
+| **Salida dirigida** | Esquema enviado con la consulta | La app recibe siempre la misma estructura |
+| **Ordenamiento de campos** | `propertyOrdering` | El modelo redacta apoyado en lo que ya detectó |
+| **Reglas anti-alucinación** | "No inventes datos", "nunca afirmes con certeza absoluta" | Evita dominios y antecedentes inventados |
+| **Delimitadores** | El mensaje va entre `<<<MENSAJE>>>` y `<<<FIN>>>` | Protege contra inyección de prompt |
+| **Temperatura 0.2** | Configuración del modelo | Diagnóstico reproducible, no creativo |
+| **Razonamiento acotado** | `thinking_level="LOW"` | Baja la latencia sin perder calidad |
+
+## 5. Implementación
+
+La prueba de concepto está en **[`notebooks/GuardIA_FastPrompting.ipynb`](notebooks/GuardIA_FastPrompting.ipynb)**,
+con las salidas de una corrida real contra la API. Los hallazgos principales:
+
+| Experimento | Resultado |
+|---|---|
+| **Evolución del prompt** (4 versiones) | Solo la versión con salida dirigida produce una respuesta que un programa puede usar — y además consume **menos** tokens en total, porque el modelo deja de escribir prosa |
+| **Optimización de consultas** | **Una sola consulta** resuelve lo mismo que tres encadenadas, con menos tokens y sin respuestas que puedan contradecirse |
+| **Nivel de razonamiento** | Mismo veredicto con razonamiento acotado, en una fracción del tiempo |
+| **Validación** | **5 de 5** aciertos, **0 falsos positivos** sobre el correo legítimo |
+| **Refinamiento** | El testing reveló que el manejo de las señales en un correo legítimo dependía de qué modelo respondiera: se fijó por prompt para que no quede librado al azar |
+| **Inyección de prompt** | Un correo con órdenes dirigidas a la IA se clasifica como riesgo **alto**: las instrucciones se tratan como señal, no se ejecutan |
+
+**Consultas a la API: una por mensaje analizado.** No por falta de alternativas, sino porque
+se midió la alternativa y se descartó.
+
+### Estructura del repositorio
 
 ```
 GuardIA/
-├── app.py                      Interfaz web (Streamlit): header, formulario,
-│                               resultado, "cómo funciona" y footer.
+├── notebooks/
+│   └── GuardIA_FastPrompting.ipynb   Prueba de concepto con los experimentos
+├── app.py                            Interfaz web (Streamlit)
 ├── guardia/
-│   ├── __init__.py
-│   ├── prompts.py              Prompt principal y esquema de la salida dirigida.
-│   ├── analisis.py             Cliente de Gemini, análisis y medición del consumo.
-│   └── ejemplos.py             Mensajes de prueba (fraudes y correos legítimos).
+│   ├── prompts.py                    Prompt principal y esquema de salida
+│   ├── analisis.py                   Cliente de Gemini, análisis y consumo
+│   └── ejemplos.py                   Correos de prueba
 ├── .streamlit/
-│   ├── config.toml             Paleta de colores de la aplicación.
-│   └── secrets.toml.example    Plantilla para la clave de API.
-├── requirements.txt            Dependencias de Python.
-└── README.md
+│   ├── config.toml                   Paleta de colores
+│   └── secrets.toml.example          Plantilla para la clave
+├── docs/                             Presentación, capturas y video
+└── requirements.txt
 ```
 
-La lógica está separada de la interfaz: `app.py` no sabe nada de Gemini, solo
-llama a las funciones del paquete `guardia/`. Cambiar de proveedor de IA
-implicaría reescribir `analisis.py` y ningún otro archivo.
+La lógica está separada de la interfaz: `app.py` no sabe nada de Gemini, solo llama a
+funciones del paquete `guardia/`. Cambiar de proveedor implicaría reescribir `analisis.py` y
+ningún otro archivo.
 
-## Cómo ejecutarlo localmente
+### Cómo ejecutarlo
 
 ```bash
 git clone https://github.com/cubi20/guardia.git
 cd guardia
-python3 -m venv venv
-source venv/bin/activate          # en Windows: venv\Scripts\activate
+python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Conseguí una clave gratuita en [Google AI Studio](https://aistudio.google.com/apikey)
-y cargala (nunca se escribe en el código):
+Conseguí una clave gratuita en [Google AI Studio](https://aistudio.google.com/apikey) y
+cargala (nunca se escribe en el código):
 
 ```bash
 cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-# editá el archivo y pegá tu clave
 ```
-
-Y levantá la aplicación:
 
 ```bash
 streamlit run app.py
 ```
 
-## Despliegue en Streamlit Community Cloud
+## 6. Limitaciones
 
-1. Subí el repositorio a GitHub (público).
-2. Entrá a [share.streamlit.io](https://share.streamlit.io) → **Create app** →
-   elegí el repo, la rama `main` y el archivo `app.py`.
-3. En **Advanced settings → Secrets**, pegá:
-   ```toml
-   GEMINI_API_KEY = "AIza..."
-   ```
-4. **Deploy**.
-
-## Factibilidad económica
-
-**El costo de operación es cero.** El nivel gratuito de la API de Gemini da 20
-consultas por día **por modelo**, y la aplicación usa cuatro en cascada, así que
-el cupo real ronda las 80 diarias. El hosting en Streamlit Community Cloud
-tampoco tiene costo: no hace falta tarjeta de crédito para poner la aplicación
-en producción.
-
-Como referencia de escalabilidad, medido sobre los cinco correos de ejemplo cada
-análisis consume unos 1.250 tokens:
-
-| Concepto | Nivel gratuito | Equivalente en nivel pago |
-|---|---|---|
-| Un análisis | US$ 0 | ≈ US$ 0,0022 |
-| 500 análisis por mes | US$ 0 | ≈ US$ 1,12 |
-| 5.000 análisis por mes | US$ 0 | ≈ US$ 11,20 |
-| Hosting (Streamlit Community Cloud) | US$ 0 | US$ 0 |
-| Repositorio (GitHub) y entorno (Python, VS Code) | US$ 0 | US$ 0 |
-
-Precios del nivel pago vigentes en agosto de 2026: US$ 0,75 por millón de tokens
-de entrada y US$ 3,75 por millón de salida para la familia Flash de Gemini 3. La
-aplicación **mide los tokens realmente consumidos** en cada consulta y muestra su
-costo equivalente en la barra lateral.
-
-## Limitaciones
-
-- **GuardIA es un asistente, no un veredicto final.** El modelo puede
-  equivocarse en ambos sentidos: marcar un correo legítimo como sospechoso o
-  dejar pasar uno malicioso. Por eso siempre recomienda verificar por un canal
-  oficial.
+- **GuardIA es un asistente, no un veredicto final.** El modelo puede equivocarse en ambas
+  direcciones, así que siempre recomienda verificar por un canal oficial.
 - **Analiza texto, no archivos.** No abre adjuntos ni sigue enlaces.
-- **No reemplaza** al antivirus, a los filtros de correo ni al segundo factor de
-  autenticación (MFA): los complementa en el punto donde esas defensas no
-  llegan, que es la decisión de la persona.
-- **Privacidad:** el texto se envía a la API de Google Gemini. No debe pegarse
-  información confidencial innecesaria; en un uso productivo correspondería
-  anonimizar los datos sensibles.
-- **El nivel gratuito tiene cupo diario:** 20 consultas por día por modelo. La
-  cascada de cuatro modelos lo multiplica, pero un pico de tráfico podría
-  agotarlo; se renueva a la medianoche del Pacífico.
-- **El phishing evoluciona:** el prompt y los ejemplos deben mantenerse
-  actualizados para no perder efectividad.
+- **No reemplaza** al antivirus, a los filtros de correo ni al MFA: los complementa donde
+  esas defensas no llegan, que es la decisión de la persona.
+- **Privacidad:** el texto se envía a la API de Google Gemini. No debe pegarse información
+  confidencial innecesaria.
+- **El conjunto de prueba es chico y sintético.** Cinco correos alcanzan para justificar la
+  factibilidad, no para afirmar una precisión general.
+- **Cupo diario del nivel gratuito:** 20 consultas por modelo. La cascada lo multiplica,
+  pero un pico de tráfico podría agotarlo.
 
-## Trabajo futuro
+## 7. Trabajo futuro
 
-La próxima función prevista es la **placa de concientización**: una pieza visual
-generada con un modelo texto → imagen a partir del diagnóstico, para que el
-responsable de la PyME pueda compartirla por el grupo interno y convertir cada
-intento de phishing recibido en material de capacitación para todo el equipo.
-Quedó fuera de esta versión porque la generación de imágenes no está disponible
-en los niveles gratuitos, y mantener la herramienta sin costo es parte de su
-propuesta de valor.
-
-## Decisiones de diseño del prompt
-
-| Decisión | Por qué |
-|---|---|
-| Rol de *analista de ciberseguridad experto* | Sitúa al modelo en el dominio correcto y mejora la precisión de las señales que detecta. |
-| Checklist explícito de qué evaluar | Reduce la ambigüedad y hace que dos análisis del mismo correo sean consistentes. |
-| Salida dirigida con esquema | La interfaz siempre recibe la misma estructura; no hay que parsear texto libre. |
-| `propertyOrdering`: señales antes que explicación | El modelo redacta apoyándose en lo que ya detectó, no al revés. |
-| Reglas anti-alucinación | Le prohíben inventar datos y afirmar con certeza absoluta. |
-| Lenguaje simple obligatorio | El destinatario es un empleado sin perfil técnico. |
-| Delimitadores `<<<MENSAJE>>>` | Protegen contra inyección de prompt: si el correo contiene órdenes dirigidas a una IA, se tratan como una señal de riesgo, no como instrucciones. |
-| Temperatura 0.2 | Buscamos un diagnóstico estable y reproducible, no creatividad. |
-| Razonamiento en nivel bajo | Medido sobre los ejemplos, el diagnóstico es igual de bueno pero la respuesta baja de 30-70 s a 4-8 s. |
-| Cascada de cuatro modelos | Cubre las caídas por sobrecarga (503) y multiplica el cupo diario gratuito. |
-
----
-
-**Tecnologías:** Python · Streamlit · API de Google Gemini (salida dirigida con
-esquema) · Streamlit Community Cloud · GitHub
+- **Placa de concientización** (texto → imagen) generada a partir del diagnóstico, para
+  convertir cada intento de phishing en material de capacitación. Quedó fuera porque la
+  generación de imágenes no está disponible en ningún nivel gratuito.
+- **Conjunto de prueba más amplio**, con correos reales anonimizados de distintos rubros.
+- **Few-shot prompting**: incorporar ejemplos resueltos dentro del prompt y medir si la
+  mejora en consistencia justifica los tokens extra.
